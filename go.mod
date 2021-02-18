@@ -1,4 +1,4 @@
-module shuffler
+module github.com/gari8/shuffler
 
 go 1.16
 
