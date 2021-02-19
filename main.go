@@ -43,15 +43,14 @@ func main() {
 		return
 	}
 
-	if strings.HasSuffix(flag.Arg(0), ".csv") {
-		shuffler.ImportPath = strings.TrimRight(flag.Arg(0), ".csv")
-	} else {
-		log.Fatal(errors.New("please select a csv file"))
-	}
-
 	if shuffler.Exe {
-		err := shuffler.setMeta(&metaData)
-		if err != nil {
+		if strings.HasSuffix(flag.Arg(0), ".csv") {
+			shuffler.ImportPath = strings.TrimRight(flag.Arg(0), ".csv")
+		} else {
+			log.Fatal(errors.New("please select a csv file"))
+		}
+
+		if err := shuffler.setMeta(&metaData); err != nil {
 			log.Fatal(err)
 		}
 		if err := metaData.Run(); err != nil {
