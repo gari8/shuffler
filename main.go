@@ -37,15 +37,16 @@ func main() {
 	flag.BoolVar(&shuffler.Exe, "p", false, "exe mode")
 	flag.BoolVar(&shuffler.Help, "h", false, "help mode")
 	flag.Parse()
-	if strings.HasSuffix(flag.Arg(0), ".csv") {
-		shuffler.ImportPath = strings.TrimRight(flag.Arg(0), ".csv")
-	} else {
-		log.Fatal(errors.New("please select a csv file"))
-	}
 
 	if shuffler.Help {
 		fmt.Println(helpMessage)
 		return
+	}
+
+	if strings.HasSuffix(flag.Arg(0), ".csv") {
+		shuffler.ImportPath = strings.TrimRight(flag.Arg(0), ".csv")
+	} else {
+		log.Fatal(errors.New("please select a csv file"))
 	}
 
 	if shuffler.Exe {
