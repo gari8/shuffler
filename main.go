@@ -109,9 +109,9 @@ func (s *Shuffler) setMeta(data *MetaData) error {
 	data.Column = lineAll[0]
 	if s.Count != 0 {
 		if s.Count > len(lineAll) {
-			data.Data = compensate(s.Count - len(lineAll), lineAll[1:])
+			data.Data = compensate(s.Count - len(lineAll)+1, lineAll[1:])
 		} else {
-			data.Data = lineAll[1:s.Count]
+			data.Data = lineAll[1:s.Count+1]
 		}
 	} else {
 		data.Data = lineAll[1:]
