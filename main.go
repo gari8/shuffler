@@ -18,7 +18,8 @@ type (
 	Shuffler struct {
 		ImportPath string
 		Help bool
-		Exe  bool
+		Count int
+		Name string
 	}
 	MetaData struct {
 		FileName string
@@ -29,12 +30,15 @@ type (
 )
 
 const helpMessage = `help message`
-const guideMessage = `guide message`
 
 func main() {
 	var shuffler Shuffler
 	var metaData MetaData
-	flag.BoolVar(&shuffler.Exe, "p", false, "exe mode")
+	var importPath string
+	var name string
+	flag.StringVar(&importPath, "p", "", "exe mode")
+	flag.StringVar(&name, "n", "", "exe mode")
+	flag.IntVar(&shuffler.Count, "c", 0, "row count")
 	flag.BoolVar(&shuffler.Help, "h", false, "help mode")
 	flag.Parse()
 
@@ -43,28 +47,28 @@ func main() {
 		return
 	}
 
-	if shuffler.Exe {
-		if strings.HasSuffix(flag.Arg(0), ".csv") {
-			shuffler.ImportPath = strings.TrimRight(flag.Arg(0), ".csv")
-		} else {
-			log.Fatal(errors.New("please select a csv file"))
-		}
-
-		if err := shuffler.setMeta(&metaData); err != nil {
-			log.Fatal(err)
-		}
-		if err := metaData.Run(); err != nil {
-			log.Fatal(err)
-		}
-		fmt.Println("create: ", metaData.FileName)
-		fmt.Print("\n...complete")
-		return
+	if strings.HasSuffix(importPath, ".csv") {
+		shuffler.ImportPath = strings.TrimRight(importPath, ".csv")
+	} else {
+		log.Fatal(errors.New("please select a csv file"))
 	}
 
-	fmt.Println(guideMessage)
+	if name != "" {
+		shuffler.Name = strings.Split(name, ".")[0]
+	}
+
+	if err := shuffler.setMeta(&metaData); err != nil {
+		log.Fatal(err)
+	}
+	if err := metaData.Run(); err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("create: ", metaData.FileName)
+	fmt.Print("\n...complete")
+	return
 }
 
-func (s *Shuffler) setMeta(data *MetaData) (error) {
+func (s *Shuffler) setMeta(data *MetaData) error {
 	if s.ImportPath == "" {
 		return errors.New("file not found")
 	}
@@ -86,20 +90,42 @@ func (s *Shuffler) setMeta(data *MetaData) (error) {
 		return err
 	}
 
+	var fName string
+
     // fileName生成
-	t := time.Now()
-	entropy := ulid.Monotonic(rand.New(rand.NewSource(t.UnixNano())), 0)
-	id := ulid.MustNew(ulid.Timestamp(t), entropy)
+    if s.Name == "" {
+		t := time.Now()
+		entropy := ulid.Monotonic(rand.New(rand.NewSource(t.UnixNano())), 0)
+		fName = s.ImportPath+"_"+ulid.MustNew(ulid.Timestamp(t), entropy).String()+".csv"
+	} else {
+		fName = s.Name+".csv"
+	}
 
 	// metaData作成
 	if data.Fixed, err = s.conversation(lineAll[0]); err != nil {
 		return err
 	}
-	data.FileName = s.ImportPath+"_"+id.String()+".csv"
+	data.FileName = fName
 	data.Column = lineAll[0]
-	data.Data = lineAll[1:]
+	if s.Count != 0 {
+		if s.Count > len(lineAll) {
+			data.Data = compensate(s.Count - len(lineAll), lineAll[1:])
+		} else {
+			data.Data = lineAll[1:s.Count]
+		}
+	} else {
+		data.Data = lineAll[1:]
+	}
 
 	return nil
+}
+
+func compensate(diff int, lines [][]string) [][]string {
+	var binder [][]string
+	for i:=0; i < diff; i++ {
+		binder = append(binder, lines[rand.Intn(len(lines))])
+	}
+	return append(lines, binder...)
 }
 
 func (s *Shuffler) conversation(column []string) ([]int, error) {
