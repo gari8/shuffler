@@ -18,4 +18,7 @@ shuffler -h
 
 // Creates a csv file sorted based on the csv in the entered path.
 shuffler -p <filepath>
+
+// Options
+shuffler -p <filepath> -n <newfile's name> -c <csv's row count>
 ```
